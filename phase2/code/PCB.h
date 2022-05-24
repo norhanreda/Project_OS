@@ -21,6 +21,9 @@ struct PCB
   int last_run;                  
   int waiting_time;                    //Total waiting time since it start use cpu
   int stopping_time;                   //The time in which the process paused.
+  int memory_size;                     //Total memory allocated by the process
+  int from_index;                      //index memory allocated from
+  int to_index;                        //index memory allcated to
    
   struct PCB *next;
   struct PCB *back;   

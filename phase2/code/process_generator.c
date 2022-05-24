@@ -1,6 +1,6 @@
 #include "headers.h"
 #include <inttypes.h>
-#include<stdio.h>
+#include <stdio.h>
 
 //////////////////////
 
@@ -12,6 +12,7 @@
 	int runtime;
 	int priority;	 
 	int arrived;
+    int memsize;
 };
 
 struct msgbuff
@@ -24,8 +25,7 @@ int number_of_processes;
 
 
 void clearResources(int);
-struct process* CreateProcesses( char* inputfile); // this function return an array of processes read from input file
-//int chooseAlgorithm(); 
+struct process* CreateProcesses(char* inputfile); // this function return an array of processes read from input file
 
 int sem, sem1, sem2, semTemp;
 int shmid;
@@ -271,10 +271,14 @@ struct process* CreateProcesses(char* inputFileName)
             fscanf(inputFile,"%d",&processes[count].arrival);
             fscanf(inputFile,"%d",&processes[count].runtime);
             fscanf(inputFile,"%d",&processes[count].priority);
-            processes[count].arrived=0;
+            fscanf(inputFile,"%d",&processes[count].memsize);
+            processes[count].arrived = 0;
             count++;
+            
         }
             fclose(inputFile);
     }
     return processes;
 }
+
+

@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     printf("%d \n", quantum);
 
     /**************************** Open file to write through out the scheduler ****************************/
-    outputLogFile = fopen("scheduler-log.txt", "w");
+    outputLogFile = fopen("scheduler.log.txt", "w");
     if (outputLogFile == NULL)
     {
         perror("Error opening file");
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
         STD_WTA = sqrt(STD_WTA );
 
     /*************************** Print scheduler.perf file ******************************/
-    outputPerfFile = fopen("scheduler-perf.txt", "w");
+    outputPerfFile = fopen("scheduler.perf.txt", "w");
     if (outputPerfFile == NULL)
     {
         perror("Error opening file");

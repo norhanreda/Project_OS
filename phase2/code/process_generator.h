@@ -5,6 +5,6 @@
 	int arrival;
 	int runtime;
 	int priority;	 
-	
+	int memsize;
 };
 

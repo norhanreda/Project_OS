@@ -27,6 +27,7 @@ struct PCB *running_proc = NULL;
 struct Queue *queue;
 FILE *outputLogFile;
 FILE *outputPerfFile;
+FILE *outputMemoryFile;
 /************************************************************************************************/
 
 /********************************** All functions declarations **********************************/
@@ -37,6 +38,7 @@ void finishProcess(int signum);
 void RoundRobin(int q);            // Round Robin
 void HighestPriorityFirst();       // Non-preemptive highest priority first algorithm
 void ShortestRemainingTimeFirst(); // Preemitive Shortest Remaining Time algorithm
+void printMemoryOutputFile();
 /************************************************************************************************/
 
 int shmid;
@@ -78,7 +80,7 @@ int main(int argc, char *argv[])
     printf("%d \n", quantum);
 
     /**************************** Open file to write through out the scheduler ****************************/
-    outputLogFile = fopen("scheduler-log.txt", "w");
+    outputLogFile = fopen("scheduler.log.txt", "w");
     if (outputLogFile == NULL)
     {
         perror("Error opening file");
@@ -220,7 +222,7 @@ int main(int argc, char *argv[])
         STD_WTA = sqrt(STD_WTA );
 
     /*************************** Print scheduler.perf file ******************************/
-    outputPerfFile = fopen("scheduler-perf.txt", "w");
+    outputPerfFile = fopen("scheduler.perf.txt", "w");
     if (outputPerfFile == NULL)
     {
         perror("Error opening file");
@@ -253,6 +255,7 @@ void createNewProcess(struct process proc)
     entry->state = ready;
     entry->remaining_time = proc.runtime;
     entry->waiting_time = 0;
+    entry->memory_size = proc.memsize;
 
     switch (schedulerType)
     {
@@ -319,6 +322,7 @@ void finishProcess(int signum)
     running_proc = NULL;
     signal(SIGUSR1, finishProcess);
 }
+
 
 void RoundRobin(int qu)
 {

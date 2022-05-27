@@ -3,6 +3,7 @@
 #include "process_generator.h"
 #include "priority_queue.h"
 #include "signal.h"
+#include"buddy.h"
 #define NUM 1000
 
 int messageQueueofprocessesid;
@@ -25,6 +26,7 @@ int shared_memory_id;       // shared memory for remaing time
 int *shared_memory_address; // shared memory for remaing time
 struct PCB *running_proc = NULL;
 struct Queue *queue;
+struct Queue *waiting_list;
 FILE *outputLogFile;
 FILE *outputPerfFile;
 FILE *outputMemoryFile;
@@ -51,13 +53,20 @@ union Semun semun2;
 union Semun semunTemp;
 union Semun processSemun;
 struct process *shm;
-
+/********************buddu instance***************************************/
+struct buddy my_buddy;
 int main(int argc, char *argv[])
 {
     // TODO implement the scheduler :)
 
     // Create queue for arriving processes
     queue = CreateQueue(NUM);
+    //create waiting list for memory allocation
+    waiting_list=CreateQueue(NUM);
+
+    //instance of buddy
+     initialize_buddy(&my_buddy);
+    
     perror("ahhhhhhh------->");
 
     // Read file arguments
@@ -239,6 +248,18 @@ int main(int argc, char *argv[])
     fclose(outputLogFile);
     shmctl(shmid, IPC_RMID, NULL);
     shmctl(shared_memory_id, IPC_RMID, NULL);
+
+
+
+    /*********** clear all IPC reasources ***********************/
+     /*shmctl(shmid, IPC_RMID, (struct shmid_ds *)0);
+     semctl(sem1, 0, IPC_RMID, semun1);
+     semctl(sem2, 0, IPC_RMID, semun2);*/
+
+
+
+
+    /*************************************************************/
     destroyClk(true);
 
     return 0;
@@ -256,7 +277,15 @@ void createNewProcess(struct process proc)
     entry->remaining_time = proc.runtime;
     entry->waiting_time = 0;
     entry->memory_size = proc.memsize;
-
+      
+     struct pair Pair=allocate(&my_buddy,entry->memory_size);
+  
+  if(Pair.start==-1 && Pair.end==-1)
+     Enqueue(waiting_list, entry);
+     
+  else
+  {
+      printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, entry->memory_size,entry->process_id ,Pair.start, Pair.end);
     switch (schedulerType)
     {
     case 1: // HPF algorithm
@@ -272,6 +301,7 @@ void createNewProcess(struct process proc)
     default:
         break;
     }
+  }
 }
 
 void readMessage(int signum)
@@ -311,6 +341,31 @@ void finishProcess(int signum)
     WTA_arr[running_proc->id - 1] = WTA;
 
     running_proc->remaining_time = *shared_memory_address;
+    //deallocate 
+ 
+
+    // enque in ready queue if possible
+    //loop on waiting list 
+    struct Queue *temp_q;
+    temp_q=CreateQueue(NUM);
+    struct PCB * temp_process;
+    while(!isEmpty(waiting_list ))
+     {
+      temp_process= Dequeue(queue);
+      struct pair temp_pair=allocate(&my_buddy,temp_process->memory_size);
+      if(temp_pair.start==-1 && temp_pair.end==-1)
+       {
+         Enqueue(temp_q,temp_process);
+       }
+     else
+        {
+            Enqueue(queue,temp_process);
+             printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, temp_process->memory_size,temp_process->process_id ,temp_pair.start, temp_pair.end);
+        }
+
+     }
+     waiting_list=temp_q;
+
 
     num_of_proc--;
 
@@ -321,6 +376,7 @@ void finishProcess(int signum)
     kill(running_proc->process_id, SIGKILL);
     running_proc = NULL;
     signal(SIGUSR1, finishProcess);
+       
 }
 
 

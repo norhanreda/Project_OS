@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     waiting_list=CreateQueue(NUM);
 
     //instance of buddy
-     initialize_buddy(&my_buddy);
+    initialize_buddy(&my_buddy);
     
     perror("ahhhhhhh------->");
 
@@ -96,6 +96,15 @@ int main(int argc, char *argv[])
         exit(-1);
     }
     fputs("# At time x process y state arrival w total z remaining y wait k \n", outputLogFile);
+    /******************************************************************************************************/
+        /**************************** Open file to write through out the scheduler ****************************/
+    outputMemoryFile = fopen("memory.log", "w");
+    if (outputLogFile == NULL)
+    {
+        perror("Error opening file");
+        exit(-1);
+    }
+    fputs("# At time x allocated y bytes for process z from i to j \n", outputMemoryFile);
     /******************************************************************************************************/
 
     /********************************** shared memory for remaining time **********************************/
@@ -246,6 +255,7 @@ int main(int argc, char *argv[])
     // Upon termination release the all resources.
     fclose(outputPerfFile);
     fclose(outputLogFile);
+    fclose(outputMemoryFile);
     shmctl(shmid, IPC_RMID, NULL);
     shmctl(shared_memory_id, IPC_RMID, NULL);
 
@@ -278,29 +288,28 @@ void createNewProcess(struct process proc)
     entry->waiting_time = 0;
     entry->memory_size = proc.memsize;
       
-     struct pair Pair=allocate(&my_buddy,entry->memory_size);
+    struct pair Pair=allocate(&my_buddy,entry->memory_size);
   
-  if(Pair.start==-1 && Pair.end==-1)
-     Enqueue(waiting_list, entry);
-     
-  else
-  {
-      printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, entry->memory_size,entry->process_id ,Pair.start, Pair.end);
-    switch (schedulerType)
+    if(Pair.start==-1 && Pair.end==-1)
+        Enqueue(waiting_list, entry);
+    else
     {
-    case 1: // HPF algorithm
-        Min_Heap_Insert(queue, entry);
-        break;
-    case 2: // SRTF algorithm
-        entry->priority = entry->remaining_time;
-        Min_Heap_Insert(queue, entry);
-        break;
-    case 3: // RR algorithm
-        Enqueue(queue, entry);
-        break;
-    default:
-        break;
-    }
+        printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, entry->memory_size,entry->process_id ,Pair.start, Pair.end);
+        switch (schedulerType)
+        {
+            case 1: // HPF algorithm
+                Min_Heap_Insert(queue, entry);
+                break;
+            case 2: // SRTF algorithm
+                entry->priority = entry->remaining_time;
+                Min_Heap_Insert(queue, entry);
+                break;
+            case 3: // RR algorithm
+                Enqueue(queue, entry);
+                break;
+            default:
+                break;
+        }
   }
 }
 
@@ -343,28 +352,29 @@ void finishProcess(int signum)
     running_proc->remaining_time = *shared_memory_address;
     //deallocate 
  
+    // deallocate(&my_buddy, running_proc->from_index, running_proc->to_index);
 
     // enque in ready queue if possible
     //loop on waiting list 
     struct Queue *temp_q;
-    temp_q=CreateQueue(NUM);
+    temp_q = CreateQueue(NUM);
     struct PCB * temp_process;
-    while(!isEmpty(waiting_list ))
-     {
-      temp_process= Dequeue(queue);
-      struct pair temp_pair=allocate(&my_buddy,temp_process->memory_size);
-      if(temp_pair.start==-1 && temp_pair.end==-1)
-       {
-         Enqueue(temp_q,temp_process);
-       }
-     else
+    while(!isEmpty(waiting_list))
+    {
+        temp_process= Dequeue(queue);
+        struct pair temp_pair=allocate(&my_buddy,temp_process->memory_size);
+        if(temp_pair.start == -1 && temp_pair.end == -1)
+        {
+            Enqueue(temp_q,temp_process);
+        }
+        else
         {
             Enqueue(queue,temp_process);
-             printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, temp_process->memory_size,temp_process->process_id ,temp_pair.start, temp_pair.end);
+            printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, temp_process->memory_size,temp_process->process_id ,temp_pair.start, temp_pair.end);
         }
 
      }
-     waiting_list=temp_q;
+    waiting_list = temp_q;
 
 
     num_of_proc--;

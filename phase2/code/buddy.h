@@ -3,7 +3,7 @@
 
 #define max_pair_size 512
 
- struct pair
+struct pair
 {
 
     int start;
@@ -12,12 +12,13 @@
 };
 
 
- struct size_list
+struct size_list
 {
 
     struct pair pair_list[max_pair_size];
     int last_index;
 };
+
 
 struct buddy
 {
@@ -25,6 +26,7 @@ struct buddy
    struct size_list lists[10];
 
 };
+
 
 // initialize lists list of 1024 of all memory 
 void initialize_buddy(struct buddy *arr)
@@ -41,15 +43,17 @@ void initialize_buddy(struct buddy *arr)
     arr->lists[9].last_index += 1;
 }
 
-struct pair allocate(struct buddy *arr , int allocation_size)
+struct pair allocate(struct buddy *arr, int allocation_size)
 {
    
    struct pair result = {.start = -1, .end = -1};
 
     if (allocation_size == 0)
         return result;
-     /*get the index of required size 
+
+    /*get the index of required size 
       index is from 0->9 */
+
     int n = ceil(log(allocation_size) / log(2)) - 1;
     if (n == -1)
         n = 0;
@@ -91,7 +95,7 @@ struct pair allocate(struct buddy *arr , int allocation_size)
         arr->lists[i].last_index -= 1;
 
        
-        i -= 1;
+        i--;
         while (i >= n)
         {
 
@@ -117,11 +121,34 @@ struct pair allocate(struct buddy *arr , int allocation_size)
             arr->lists[i].pair_list[0] = arr->lists[i].pair_list[arr->lists[i].last_index - 1];
             arr->lists[i].last_index -= 1;
 
-            i -= 1;
+            i--;
         }
     }
 
    
     return result;
+}
+
+void mergebuddies(struct buddy *arr, int block_index, int block_size, int start_index)
+{
+    if(block_index >= 9) return;
+
+    
+    int buddyNumber, buddyAddress;
+
+    buddyNumber = start_index / block_size;
+}
+
+void deallocate(struct buddy *arr, int starting_index, int ending_index)
+{
+    int size = 1 + ending_index - starting_index;
+    int index = ceil(log(size)/log(2)) - 1;
+
+    pair freeblock = {.start = starting_index, .end = ending_index};
+
+    arr->lists[index].pair_list[arr->lists[index].last_index] = freeblock;
+    (arr->lists[index].last_index)++;
+
+    mergrbuudies(arr, index, size, starting_index);
 }
 

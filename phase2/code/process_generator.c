@@ -4,8 +4,7 @@
 
 //////////////////////
 
-
- struct process
+struct process
 {
 	int id;			
 	int arrival;
@@ -202,11 +201,11 @@ int main(int argc, char * argv[])
         {
             if(processes[i].arrived == 0) 
             {
-                printf("Process id from process generator: %d\n", processes[i].id);
+                // printf("Process id from process generator: %d\n", processes[i].id);
                 if(processes[i].arrival == current_time)
                 { 
                     down(semTemp);
-                    printf("At time %d process generator sent process %d\n",current_time, processes[i].id);
+                    // printf("At time %d process generator sent process %d\n",current_time, processes[i].id);
                     processes[i].arrived = 1;
                     printf("arrival %d  \t currenttime %d  \t clk  %d \n", processes[i].arrival,current_time,getClk());
                     // if the arrival time is the current time send it to schadular 
@@ -272,6 +271,7 @@ struct process* CreateProcesses(char* inputFileName)
             fscanf(inputFile,"%d",&processes[count].runtime);
             fscanf(inputFile,"%d",&processes[count].priority);
             fscanf(inputFile,"%d",&processes[count].memsize);
+            printf("%d\n",processes[count].memsize);
             processes[count].arrived = 0;
             count++;
             

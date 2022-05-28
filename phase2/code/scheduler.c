@@ -288,13 +288,16 @@ void createNewProcess(struct process proc)
     entry->waiting_time = 0;
     entry->memory_size = proc.memsize;
       
-    struct pair Pair=allocate(&my_buddy,entry->memory_size);
+    struct pair Pair = allocate(&my_buddy,entry->memory_size);
   
     if(Pair.start==-1 && Pair.end==-1)
         Enqueue(waiting_list, entry);
     else
     {
-        printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, entry->memory_size,entry->process_id ,Pair.start, Pair.end);
+        entry->from_index = Pair.start;
+        entry->to_index = Pair.end;
+        printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, entry->memory_size,entry->id ,Pair.start, Pair.end);
+        fprintf(outputMemoryFile, "At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, entry->memory_size,entry->id ,Pair.start, Pair.end);        
         switch (schedulerType)
         {
             case 1: // HPF algorithm
@@ -350,9 +353,11 @@ void finishProcess(int signum)
     WTA_arr[running_proc->id - 1] = WTA;
 
     running_proc->remaining_time = *shared_memory_address;
+
     //deallocate 
- 
-    // deallocate(&my_buddy, running_proc->from_index, running_proc->to_index);
+    deallocate(&my_buddy, running_proc->from_index, running_proc->to_index);
+    printf("At time %d freed %d bytes for process %d from %d to %d \n", cur_time, running_proc->memory_size,running_proc->id ,running_proc->from_index, running_proc->to_index);
+    fprintf(outputMemoryFile, "At time %d freed %d bytes for process %d from %d to %d \n", cur_time, running_proc->memory_size,running_proc->id ,running_proc->from_index, running_proc->to_index);
 
     // enque in ready queue if possible
     //loop on waiting list 
@@ -361,8 +366,8 @@ void finishProcess(int signum)
     struct PCB * temp_process;
     while(!isEmpty(waiting_list))
     {
-        temp_process= Dequeue(queue);
-        struct pair temp_pair=allocate(&my_buddy,temp_process->memory_size);
+        temp_process = Dequeue(queue);
+        struct pair temp_pair = allocate(&my_buddy,temp_process->memory_size);
         if(temp_pair.start == -1 && temp_pair.end == -1)
         {
             Enqueue(temp_q,temp_process);
@@ -370,7 +375,8 @@ void finishProcess(int signum)
         else
         {
             Enqueue(queue,temp_process);
-            printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, temp_process->memory_size,temp_process->process_id ,temp_pair.start, temp_pair.end);
+            printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, temp_process->memory_size,temp_process->id ,temp_pair.start, temp_pair.end);
+            fprintf(outputMemoryFile, "At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, running_proc->memory_size,running_proc->id ,running_proc->from_index, running_proc->to_index);
         }
 
      }

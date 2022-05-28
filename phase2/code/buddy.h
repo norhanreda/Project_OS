@@ -5,10 +5,8 @@
 
 struct pair
 {
-
     int start;
     int end;
-
 };
 
 
@@ -133,10 +131,47 @@ void mergebuddies(struct buddy *arr, int block_index, int block_size, int start_
 {
     if(block_index >= 9) return;
 
-    
     int buddyNumber, buddyAddress;
 
     buddyNumber = start_index / block_size;
+    if (buddyNumber%2 == 0)
+    {
+        buddyAddress = start_index + block_size;
+    }
+    else
+    {
+        buddyAddress = start_index - block_size;
+    }
+    
+    int i;
+    for(i = 0; i < arr->lists[block_index].last_index; i++)
+    {
+        if(arr->lists[i].pair_list[block_index].start == buddyAddress)
+        {
+            struct pair TempPair;
+            if (buddyNumber%2 == 0)
+            {
+                TempPair.start = start_index;
+                TempPair.end = (2 * block_size - 1) + start_index;
+            }
+            else
+            {
+                TempPair.start = buddyAddress;
+                TempPair.end = (2 * block_size) + buddyAddress;
+            }
+
+            arr->lists[block_index + 1].pair_list[arr->lists[block_index].last_index] = TempPair;
+            (arr->lists[block_index + 1].last_index)++;
+
+            mergebuddies(arr, block_index + 1, block_size * 2, TempPair.start);
+
+            (arr->lists[block_index].last_index)--;
+            
+            arr->lists[block_index].pair_list[i] = arr->lists[block_index].pair_list[arr->lists[block_index].last_index - 1];
+            (arr->lists[block_index].last_index)--;
+            break;
+        }
+    }
 }
 
 void deallocate(struct buddy *arr, int starting_index, int ending_index)
@@ -144,11 +179,11 @@ void deallocate(struct buddy *arr, int starting_index, int ending_index)
     int size = 1 + ending_index - starting_index;
     int index = ceil(log(size)/log(2)) - 1;
 
-    pair freeblock = {.start = starting_index, .end = ending_index};
+    struct pair freeblock = {.start = starting_index, .end = ending_index};
 
     arr->lists[index].pair_list[arr->lists[index].last_index] = freeblock;
     (arr->lists[index].last_index)++;
 
-    mergrbuudies(arr, index, size, starting_index);
+    mergebuddies(arr, index, size, starting_index);
 }
 

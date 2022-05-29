@@ -67,10 +67,10 @@ int main(int argc, char * argv[])
 
     /////////////////////////////
 
-    shmid = shmget(65,1000*sizeof(struct process), IPC_CREAT | 0664);
-    sem1 = semget(66, 1, 0666 | IPC_CREAT);
-    sem2 = semget(67, 1, 0666 | IPC_CREAT);
-    semTemp = semget(68, 1, 0666 | IPC_CREAT);
+    shmid = shmget(95,1000*sizeof(struct process), IPC_CREAT | 0664);
+    sem1 = semget(96, 1, 0666 | IPC_CREAT);
+    sem2 = semget(97, 1, 0666 | IPC_CREAT);
+    semTemp = semget(98, 1, 0666 | IPC_CREAT);
     if (shmid == -1 || sem1==-1 || sem2==-1)
     {
         perror("Error in create \n");

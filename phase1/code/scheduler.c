@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
          //if (running_proc != NULL)
 
         //     printf("_____________________________________________________ %d \n", cur_time);
-        if (!(isEmpty(queue)) || running_proc)
+        if (!(isEmpty(queue)) || running_proc)//
         {
             switch (schedulerType)
             {

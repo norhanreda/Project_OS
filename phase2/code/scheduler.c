@@ -136,10 +136,10 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    shmid = shmget(65, 1000 * sizeof(struct process), IPC_CREAT | 0664);
-    sem1 = semget(66, 1, 0666 | IPC_CREAT);
-    sem2 = semget(67, 1, 0666 | IPC_CREAT);
-    semTemp = semget(68, 1, 0666 | IPC_CREAT);
+    shmid = shmget(95, 1000 * sizeof(struct process), IPC_CREAT | 0664);
+    sem1 = semget(96, 1, 0666 | IPC_CREAT);
+    sem2 = semget(97, 1, 0666 | IPC_CREAT);
+    semTemp = semget(98, 1, 0666 | IPC_CREAT);
     if (shmid == -1 || sem1 == -1 || sem2 == -1)
     {
         perror("Error in create \n");
@@ -291,7 +291,25 @@ void createNewProcess(struct process proc)
     struct pair Pair = allocate(&my_buddy,entry->memory_size);
   
     if(Pair.start==-1 && Pair.end==-1)
-        Enqueue(waiting_list, entry);
+    {
+        //Enqueue(waiting_list, entry);
+        switch (schedulerType)
+        {
+            case 1: // HPF algorithm
+                Min_Heap_Insert(waiting_list, entry);
+                break;
+            case 2: // SRTF algorithm
+                entry->priority = entry->remaining_time;
+                Min_Heap_Insert(waiting_list, entry);
+                break;
+            case 3: // RR algorithm
+                Enqueue(waiting_list, entry);
+                break;
+            default:
+                break;
+        }
+
+    }
     else
     {
         entry->from_index = Pair.start;
@@ -366,11 +384,12 @@ void finishProcess(int signum)
     struct PCB * temp_process;
     while(!isEmpty(waiting_list))
     {
-        temp_process = Dequeue(queue);
+        temp_process = Dequeue(waiting_list);
         struct pair temp_pair = allocate(&my_buddy,temp_process->memory_size);
         if(temp_pair.start == -1 && temp_pair.end == -1)
         {
             Enqueue(temp_q,temp_process);
+            
         }
         else
         {

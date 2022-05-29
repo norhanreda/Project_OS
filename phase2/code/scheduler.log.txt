@@ -1,0 +1,11 @@
+# At time x process y state arrival w total z remaining y wait k 
+At time 2 process 1 started arr 2 total 1 remain 1 wait 0
+At time 3 process 1 finished arr 2 total 1 remain 0 wait 0 TA 1 WTA 1.00 
+At time 4 process 2 started arr 4 total 1 remain 1 wait 0
+At time 5 process 2 finished arr 4 total 1 remain 0 wait 0 TA 1 WTA 1.00 
+At time 5 process 3 started arr 5 total 1 remain 1 wait 0
+At time 6 process 3 finished arr 5 total 1 remain 0 wait 0 TA 1 WTA 1.00 
+At time 7 process 4 started arr 5 total 1 remain 1 wait 2
+At time 8 process 4 finished arr 5 total 1 remain 0 wait 2 TA 3 WTA 3.00 
+At time 9 process 5 started arr 6 total 3 remain 3 wait 3
+At time 12 process 5 finished arr 6 total 3 remain 0 wait 3 TA 6 WTA 2.00 

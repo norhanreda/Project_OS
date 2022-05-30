@@ -414,7 +414,7 @@ void allocateFromWaitingList()
                     break;
             }
             printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, temp_process->memory_size,temp_process->id ,temp_pair.start, temp_pair.end);
-            fprintf(outputMemoryFile, "At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, running_proc->memory_size,running_proc->id ,running_proc->from_index, running_proc->to_index);
+            fprintf(outputMemoryFile, "At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, temp_process->memory_size,temp_process->id ,temp_pair.start, temp_pair.end);
         }
 
     }

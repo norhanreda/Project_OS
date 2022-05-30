@@ -46,11 +46,11 @@ int main(int agrc, char * argv[])
         
                 if(current_time != getClk())
                 {
-                        if(getClk() - current_time > 1)
-                        {
-                                current_time = getClk();
-                                continue;
-                        }
+                        // if(getClk() - current_time > 1)
+                        // {
+                        //         current_time = getClk();
+                        //         continue;
+                        // }
         
                 current_time = getClk();
                 remainingtime--;
@@ -71,5 +71,5 @@ int main(int agrc, char * argv[])
 
 
     destroyClk(false);
-    exxit(0);
+    exit(0);
 }

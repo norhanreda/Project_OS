@@ -129,12 +129,12 @@ int main(int argc, char *argv[])
     /*********************************************************/
 
     /************************ Semaphores ************************/
-    int sem = semget(20, 1, 0666);
-    if (sem == -1)
-    {
-        perror("Error in create sem");
-        exit(-1);
-    }
+    // int sem = semget(20, 1, 0666);
+    // if (sem == -1)
+    // {
+    //     perror("Error in create sem");
+    //     exit(-1);
+    // }
 
     shmid = shmget(95, 1000 * sizeof(struct process), IPC_CREAT | 0664);
     sem1 = semget(96, 1, 0666 | IPC_CREAT);
@@ -257,6 +257,8 @@ int main(int argc, char *argv[])
     fclose(outputLogFile);
     fclose(outputMemoryFile);
    
+   /**************free memory**************************/
+      free(WTA_arr);
 
     /*********** clear all IPC reasources ***********************/
        printf("scheduler finished  \n");
@@ -391,12 +393,44 @@ void finishProcess(int signum)
         struct pair temp_pair = allocate(&my_buddy,temp_process->memory_size);
         if(temp_pair.start == -1 && temp_pair.end == -1)
         {
-            Enqueue(temp_q,temp_process);
+            //Enqueue(temp_q,temp_process);
+            switch (schedulerType)
+        {
+            case 1: // HPF algorithm
+                Min_Heap_Insert(temp_q,temp_process);
+                break;
+            case 2: // SRTF algorithm
+                temp_process->priority = temp_process->remaining_time;
+                Min_Heap_Insert(temp_q, temp_process);
+                break;
+            case 3: // RR algorithm
+                Enqueue(temp_q,temp_process);
+                break;
+            default:
+                break;
+        }
+            
             
         }
         else
         {
-            Enqueue(queue,temp_process);
+            //Enqueue(queue,temp_process);
+               switch (schedulerType)
+        {
+            case 1: // HPF algorithm
+                Min_Heap_Insert(queue,temp_process);
+                break;
+            case 2: // SRTF algorithm
+                temp_process->priority = temp_process->remaining_time;
+                Min_Heap_Insert(queue, temp_process);
+                break;
+            case 3: // RR algorithm
+                Enqueue(queue,temp_process);
+                break;
+            default:
+                break;
+        }
+            
             printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, temp_process->memory_size,temp_process->id ,temp_pair.start, temp_pair.end);
             fprintf(outputMemoryFile, "At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, running_proc->memory_size,running_proc->id ,running_proc->from_index, running_proc->to_index);
         }
@@ -412,6 +446,7 @@ void finishProcess(int signum)
     printf("At time %d process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f\n", getClk(), running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time, TA, WTA);
 
     kill(running_proc->process_id, SIGKILL);
+    free(running_proc);
     running_proc = NULL;
     signal(SIGUSR1, finishProcess);
        

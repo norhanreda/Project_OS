@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
         printf("current time in scheduler is %d \n", cur_time);
         total_time++;
 
-        if (!(isEmpty(queue)) || running_proc)
+        if (!(isEmpty(queue)) || running_proc )
         {
             switch (schedulerType)
             {
@@ -468,8 +468,11 @@ void RoundRobin(int qu)
         printf("quantum now %d, %d, %d\n", cur_time, cur_quantum, quantum);
         running_proc->remaining_time = *shared_memory_address;
         
-        if (cur_quantum == qu)
+        if (cur_quantum == qu && running_proc->remaining_time !=0)//quantum ended but not finished
         {
+            //added new 
+            if(isEmpty(queue))
+                return;
             // insert back to ready queue
             Enqueue(queue, running_proc);
             running_proc->last_run = cur_time;
@@ -485,6 +488,8 @@ void RoundRobin(int qu)
         else // return to run again
         {
             return;
+
+
         }
     }
 

@@ -256,15 +256,18 @@ int main(int argc, char *argv[])
     fclose(outputPerfFile);
     fclose(outputLogFile);
     fclose(outputMemoryFile);
-    shmctl(shmid, IPC_RMID, NULL);
-    shmctl(shared_memory_id, IPC_RMID, NULL);
-
-
+   
 
     /*********** clear all IPC reasources ***********************/
-     /*shmctl(shmid, IPC_RMID, (struct shmid_ds *)0);
-     semctl(sem1, 0, IPC_RMID, semun1);
-     semctl(sem2, 0, IPC_RMID, semun2);*/
+       printf("scheduler finished  \n");
+
+    shmctl(shmid, IPC_RMID, NULL);
+    shmctl(shared_memory_id, IPC_RMID, NULL);
+    semctl(sem1, 0, IPC_RMID, semun1);
+    semctl(sem2, 0, IPC_RMID, semun2);
+    semctl(semTemp, 0, IPC_RMID, semunTemp);
+    semctl(processSem, 0, IPC_RMID, processSemun);
+printf("free shared memory and distroy semaphores ! \n");
 
 
 

@@ -109,12 +109,12 @@ int main(int argc, char *argv[])
     /*********************************************************/
 
     /************************ Semaphores ************************/
-    int sem = semget(20, 1, 0666);
-    if (sem == -1)
-    {
-        perror("Error in create sem");
-        exit(-1);
-    }
+    // int sem = semget(20, 1, 0666);
+    // if (sem == -1)
+    // {
+    //     perror("Error in create sem");
+    //     exit(-1);
+    // }
 
     shmid = shmget(65, 1000 * sizeof(struct process), IPC_CREAT | 0664);
     sem1 = semget(66, 1, 0666 | IPC_CREAT);
@@ -235,8 +235,18 @@ int main(int argc, char *argv[])
     // Upon termination release the all resources.
     fclose(outputPerfFile);
     fclose(outputLogFile);
+      /**************free memory**************************/
+      free(WTA_arr);
+    printf("scheduler finished  \n");
+/*********** clear all IPC reasources ***********************/
     shmctl(shmid, IPC_RMID, NULL);
     shmctl(shared_memory_id, IPC_RMID, NULL);
+    semctl(sem1, 0, IPC_RMID, semun1);
+    semctl(sem2, 0, IPC_RMID, semun2);
+    semctl(semTemp, 0, IPC_RMID, semunTemp);
+    semctl(processSem, 0, IPC_RMID, processSemun);
+printf("free shared memory and distroy semaphores ! \n");
+/************************************************/
     destroyClk(true);
 
     return 0;
@@ -316,6 +326,8 @@ void finishProcess(int signum)
     printf("At time %d process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f\n", getClk(), running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time, TA, WTA);
 
     kill(running_proc->process_id, SIGKILL);
+    
+     free(running_proc);
     running_proc = NULL;
     signal(SIGUSR1, finishProcess);
 }

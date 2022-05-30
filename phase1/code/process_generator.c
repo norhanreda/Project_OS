@@ -1,6 +1,7 @@
 #include "headers.h"
 #include <inttypes.h>
 #include<stdio.h>
+#include <string.h>
 
 //////////////////////
 
@@ -30,6 +31,22 @@ struct process* CreateProcesses( char* inputfile); // this function return an ar
 int sem, sem1, sem2, semTemp;
 int shmid;
 union Semun semun, semun1, semun2, semunTemp;
+//reverse a string function 
+void revstr(char *str1)  
+{  
+    // declare variable  
+    int i, len, temp;  
+    len = strlen(str1); // use strlen() to get the length of str string  
+      
+    // use for loop to iterate the string   
+    for (i = 0; i < len/2; i++)  
+    {  
+        // temp variable use to temporary hold the string  
+        temp = str1[i];  
+        str1[i] = str1[len - i - 1];  
+        str1[len - i - 1] = temp;  
+    }  
+}  
 
 char *Itoa(int number)
 {
@@ -58,6 +75,10 @@ char *Itoa(int number)
         numberSize++;
         numberStr = (char *)realloc(numberStr, numberSize);
         numberStr[numberSize - 1] = '\0';
+         printf("numberStr is %s \n ",numberStr);
+        
+        revstr(numberStr);
+         printf("rev is %s \n ",numberStr);
 
         return numberStr;
 }

@@ -109,13 +109,6 @@ int main(int argc, char *argv[])
     /*********************************************************/
 
     /************************ Semaphores ************************/
-    // int sem = semget(20, 1, 0666);
-    // if (sem == -1)
-    // {
-    //     perror("Error in create sem");
-    //     exit(-1);
-    // }
-
     shmid = shmget(65, 1000 * sizeof(struct process), IPC_CREAT | 0664);
     sem1 = semget(66, 1, 0666 | IPC_CREAT);
     sem2 = semget(67, 1, 0666 | IPC_CREAT);
@@ -165,6 +158,7 @@ int main(int argc, char *argv[])
     /*********************************************************/
     cur_time = -1, total_time = 0, idle_time = 0;
     initClk();
+
     // Loop until there are no more processes left
     running_proc = NULL;
     while (num_of_proc)
@@ -174,14 +168,13 @@ int main(int argc, char *argv[])
 
         cur_time = getClk();
         down(sem2);
+
         if (running_proc != NULL)
             down(processSem);
+
         printf("current time in scheduler is %d \n", cur_time);
         total_time++;
 
-         //if (running_proc != NULL)
-
-        //     printf("_____________________________________________________ %d \n", cur_time);
         if (!(isEmpty(queue)) || running_proc)//
         {
             switch (schedulerType)
@@ -204,8 +197,6 @@ int main(int argc, char *argv[])
             idle_time++;
             printf("current time is %d and idle time is %d\n", cur_time, idle_time);
         }
-        //if (running_proc != NULL)
-        //up(processSem);
     }
 
     // Calculate CPU utilization
@@ -235,21 +226,24 @@ int main(int argc, char *argv[])
     // Upon termination release the all resources.
     fclose(outputPerfFile);
     fclose(outputLogFile);
-      /**************free memory**************************/
-      free(WTA_arr);
+
+    /*************************free memory**************************/
+    free(WTA_arr);
     printf("scheduler finished  \n");
-/*********** clear all IPC reasources ***********************/
+    /**************************************************************/
+
+    /***********************clear all IPC reasources***********************/
     shmctl(shmid, IPC_RMID, NULL);
     shmctl(shared_memory_id, IPC_RMID, NULL);
     semctl(sem1, 0, IPC_RMID, semun1);
     semctl(sem2, 0, IPC_RMID, semun2);
     semctl(semTemp, 0, IPC_RMID, semunTemp);
     semctl(processSem, 0, IPC_RMID, processSemun);
-printf("free shared memory and distroy semaphores ! \n");
-/************************************************/
-    destroyClk(true);
+    printf("free shared memory and distroy semaphores ! \n");
+    /***********************************************************************/
 
-    return 0;
+    destroyClk(true);
+    exit(0);
 }
 
 // a function that intialize process and and it to ready queue
@@ -335,10 +329,9 @@ void finishProcess(int signum)
 void RoundRobin(int qu)
 {
     // The process consumes a quantum now
-    if (running_proc )
+    if (running_proc)
     {
         cur_quantum++;
-        //(*shared_memory_address)--;
         printf("quantum now %d, %d, %d\n", cur_time, cur_quantum, quantum);
         running_proc->remaining_time = *shared_memory_address;
         
@@ -346,7 +339,6 @@ void RoundRobin(int qu)
         {
             // insert back to ready queue
             Enqueue(queue, running_proc);
-            //kill(running_proc->process_id, SIGSTOP);
             running_proc->last_run = cur_time;
             running_proc->state = blocked;
 
@@ -355,34 +347,24 @@ void RoundRobin(int qu)
             printf("At time %d process %d stopped arr %d total %d remain %d wait %d\n", cur_time, running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time);
 
             // send signal stop to process
-             kill(running_proc->process_id, SIGSTOP);
+            kill(running_proc->process_id, SIGSTOP);
         }
         else // return to run again
         {
-            // printf(" HEllo from else ,\n", cur_time);
             return;
         }
     }
-    // else
-    //     printf(" HEllo from else  %d,\n", cur_time);
-
 
     printf("welcome in RR \n");
     cur_quantum = 0;
-    /*if(const_num_of_proc==num_of_proc)
-    cur_quantum = 1;
-    else cur_quantum=0;*/
     struct PCB *temp = running_proc;
-    // int flag=
    
     running_proc = Dequeue(queue);
+    printf("at time %d , value in queue is:%d \n",cur_time,running_proc->id);
 
-  printf("at time %d , value in queue is:%d \n",cur_time,running_proc->id);
     // the process runs for the first time
     if (running_proc->state == ready)
     {
-
-        // cur_quantum++;
         // First calculate waiting time
         *shared_memory_address = running_proc->remaining_time;
         running_proc->waiting_time = cur_time - running_proc->arrival_time;
@@ -391,19 +373,10 @@ void RoundRobin(int qu)
         fprintf(outputLogFile, "At time %d process %d started arr %d total %d remain %d wait %d\n", cur_time, running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time);
         printf("At time %d process %d started arr %d total %d remain %d wait %d\n", cur_time, running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time);
         startProcess(running_proc);
-        // if (running_proc->id == 1)
-        // {
-        //     goto label;
-        //     cur_quantum++;
-        //     // running_proc->remaining_time= running_proc->remaining_time+2;
-        // }
     }
     // the process runs from a blocing state
     else if (running_proc->state == blocked)
     {
-
-   // // add signal continue
-         //kill(running_proc->process_id, SIGCONT);
         running_proc->state = ready;
         running_proc->waiting_time += cur_time - running_proc->last_run;
 
@@ -411,8 +384,8 @@ void RoundRobin(int qu)
         fprintf(outputLogFile, "At time %d process %d resumed arr %d total %d remain %d wait %d\n", cur_time, running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time);
         printf("At time %d process %d resumed arr %d total %d remain %d wait %d\n", cur_time, running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time);
 
-        // // add signal continue
-         kill(running_proc->process_id, SIGCONT);
+        // add signal continue
+        kill(running_proc->process_id, SIGCONT);
     }
 }
 

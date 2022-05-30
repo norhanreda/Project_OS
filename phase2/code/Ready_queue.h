@@ -49,25 +49,24 @@ struct Queue* CreateQueue(unsigned capacity)
         queue->capacity = capacity; 
         queue->front = queue->size = 0; 
         queue->rear = capacity - 1; 
-        queue->array_of_processes= malloc(queue->capacity * sizeof(struct PCB*)); // (struct PCB**)
+        queue->array_of_processes = malloc(queue->capacity * sizeof(struct PCB*)); // (struct PCB**)
         return queue; 
 } 
 
 int isfull(struct Queue * q)
 {
-     if(q->size==q->capacity)
+     if(q->size == q->capacity)
        return 1; //queue is full
        else
        return 0; //queue is not full
 }
 
-int isEmpty(struct Queue * q)
-
+bool isEmpty(struct Queue * q)
 {
-if(q->size==0)
- return 1;
- else 
- return 0;
+        if(q->size == 0)
+                return true;
+        else 
+                return false;
 }
 void Enqueue(struct Queue* queue, struct PCB* p)  // enqueue a process into queue
 { 

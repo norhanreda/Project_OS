@@ -177,9 +177,14 @@ void mergebuddies(struct buddy *arr, int block_index, int block_size, int start_
 void deallocate(struct buddy *arr, int starting_index, int ending_index)
 {
     int size = 1 + ending_index - starting_index;
+    printf("starting index: %d ending index: %d size: %d ", starting_index, ending_index, size);
     int index = ceil(log(size)/log(2)) - 1;
 
-    struct pair freeblock = {.start = starting_index, .end = ending_index};
+    printf("index: %d\n", index);
+
+    struct pair freeblock;
+    freeblock.start = starting_index;
+    freeblock.end = ending_index;
 
     arr->lists[index].pair_list[arr->lists[index].last_index] = freeblock;
     (arr->lists[index].last_index)++;

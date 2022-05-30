@@ -129,13 +129,6 @@ int main(int argc, char *argv[])
     /*********************************************************/
 
     /************************ Semaphores ************************/
-    // int sem = semget(20, 1, 0666);
-    // if (sem == -1)
-    // {
-    //     perror("Error in create sem");
-    //     exit(-1);
-    // }
-
     shmid = shmget(95, 1000 * sizeof(struct process), IPC_CREAT | 0664);
     sem1 = semget(96, 1, 0666 | IPC_CREAT);
     sem2 = semget(97, 1, 0666 | IPC_CREAT);
@@ -186,6 +179,7 @@ int main(int argc, char *argv[])
     cur_time = -1, total_time = 0, idle_time = 0;
     initClk();
     // Loop until there are no more processes left
+    
     running_proc = NULL;
     while (num_of_proc)
     {
@@ -194,14 +188,11 @@ int main(int argc, char *argv[])
 
         cur_time = getClk();
         down(sem2);
-        if (running_proc != NULL)
+        if(running_proc != NULL)
             down(processSem);
         printf("current time in scheduler is %d \n", cur_time);
         total_time++;
 
-         //if (running_proc != NULL)
-
-        //     printf("_____________________________________________________ %d \n", cur_time);
         if (!(isEmpty(queue)) || running_proc)
         {
             switch (schedulerType)
@@ -224,8 +215,6 @@ int main(int argc, char *argv[])
             idle_time++;
             printf("current time is %d and idle time is %d\n", cur_time, idle_time);
         }
-        //if (running_proc != NULL)
-        //up(processSem);
     }
 
     // Calculate CPU utilization
@@ -269,15 +258,12 @@ int main(int argc, char *argv[])
     semctl(sem2, 0, IPC_RMID, semun2);
     semctl(semTemp, 0, IPC_RMID, semunTemp);
     semctl(processSem, 0, IPC_RMID, processSemun);
-printf("free shared memory and distroy semaphores ! \n");
-
-
-
-
+    printf("free shared memory and distroy semaphores ! \n");
     /*************************************************************/
+
     destroyClk(true);
 
-    return 0;
+    exit(0);
 }
 
 // a function that intialize process and and it to ready queue
@@ -295,9 +281,9 @@ void createNewProcess(struct process proc)
       
     struct pair Pair = allocate(&my_buddy,entry->memory_size);
   
-    if(Pair.start==-1 && Pair.end==-1)
+    if(Pair.start == -1 && Pair.end == -1)
     {
-        //Enqueue(waiting_list, entry);
+        printf("process %d added to waiting list\n", entry->id);
         switch (schedulerType)
         {
             case 1: // HPF algorithm
@@ -365,6 +351,76 @@ void startProcess(struct PCB *pro)
     }
 }
 
+void allocateFromWaitingList()
+{
+    // enque in ready queue if possible
+    //loop on waiting list 
+    struct Queue *temp_q;
+    temp_q = CreateQueue(NUM);
+    struct PCB * temp_process;
+    while(!isEmpty(waiting_list))
+    {
+        switch (schedulerType)
+        {
+            case 1: // HPF algorithm
+                temp_process = Heap_Extract_MIN(waiting_list);
+                break;
+            case 2: // SRTF algorithm
+                temp_process = Heap_Extract_MIN(waiting_list);
+                break;
+            case 3: // RR algorithm
+                temp_process = Dequeue(waiting_list);
+                break;
+            default:
+                break;
+        }
+        struct pair temp_pair = allocate(&my_buddy,temp_process->memory_size);
+        if(temp_pair.start == -1 && temp_pair.end == -1)
+        {
+            printf("Couldnt allocate process %d \n", temp_process->id);
+            switch (schedulerType)
+            {
+                case 1: // HPF algorithm
+                    Min_Heap_Insert(temp_q,temp_process);
+                    break;
+                case 2: // SRTF algorithm
+                    temp_process->priority = temp_process->remaining_time;
+                    Min_Heap_Insert(temp_q, temp_process);
+                    break;
+                case 3: // RR algorithm
+                    Enqueue(temp_q,temp_process);
+                    break;
+                default:
+                    break;
+            }   
+        }
+        else
+        {
+            temp_process->from_index = temp_pair.start;
+            temp_process->to_index = temp_pair.end; 
+            switch (schedulerType)
+            {
+                case 1: // HPF algorithm
+                    Min_Heap_Insert(queue,temp_process);
+                    break;
+                case 2: // SRTF algorithm
+                    temp_process->priority = temp_process->remaining_time;
+                    Min_Heap_Insert(queue, temp_process);
+                    break;
+                case 3: // RR algorithm
+                    Enqueue(queue,temp_process);
+                    break;
+                default:
+                    break;
+            }
+            printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, temp_process->memory_size,temp_process->id ,temp_pair.start, temp_pair.end);
+            fprintf(outputMemoryFile, "At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, running_proc->memory_size,running_proc->id ,running_proc->from_index, running_proc->to_index);
+        }
+
+    }
+    waiting_list = temp_q;
+}
+
 void finishProcess(int signum)
 {
     running_proc->finsihing_time = getClk();
@@ -382,70 +438,20 @@ void finishProcess(int signum)
     printf("At time %d freed %d bytes for process %d from %d to %d \n", cur_time, running_proc->memory_size,running_proc->id ,running_proc->from_index, running_proc->to_index);
     fprintf(outputMemoryFile, "At time %d freed %d bytes for process %d from %d to %d \n", cur_time, running_proc->memory_size,running_proc->id ,running_proc->from_index, running_proc->to_index);
 
-    // enque in ready queue if possible
-    //loop on waiting list 
-    struct Queue *temp_q;
-    temp_q = CreateQueue(NUM);
-    struct PCB * temp_process;
-    while(!isEmpty(waiting_list))
+    if(!isEmpty(waiting_list))
     {
-        temp_process = Dequeue(waiting_list);
-        struct pair temp_pair = allocate(&my_buddy,temp_process->memory_size);
-        if(temp_pair.start == -1 && temp_pair.end == -1)
-        {
-            //Enqueue(temp_q,temp_process);
-            switch (schedulerType)
-        {
-            case 1: // HPF algorithm
-                Min_Heap_Insert(temp_q,temp_process);
-                break;
-            case 2: // SRTF algorithm
-                temp_process->priority = temp_process->remaining_time;
-                Min_Heap_Insert(temp_q, temp_process);
-                break;
-            case 3: // RR algorithm
-                Enqueue(temp_q,temp_process);
-                break;
-            default:
-                break;
-        }
-            
-            
-        }
-        else
-        {
-            //Enqueue(queue,temp_process);
-               switch (schedulerType)
-        {
-            case 1: // HPF algorithm
-                Min_Heap_Insert(queue,temp_process);
-                break;
-            case 2: // SRTF algorithm
-                temp_process->priority = temp_process->remaining_time;
-                Min_Heap_Insert(queue, temp_process);
-                break;
-            case 3: // RR algorithm
-                Enqueue(queue,temp_process);
-                break;
-            default:
-                break;
-        }
-            
-            printf("At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, temp_process->memory_size,temp_process->id ,temp_pair.start, temp_pair.end);
-            fprintf(outputMemoryFile, "At time %d allocated %d bytes for process %d from %d to %d \n", cur_time, running_proc->memory_size,running_proc->id ,running_proc->from_index, running_proc->to_index);
-        }
-
-     }
-    waiting_list = temp_q;
-
+        printf("dakhalt allocation\n");
+        allocateFromWaitingList();
+    }
 
     num_of_proc--;
-
+    printf("number of processes: %d\n", num_of_proc);
     // print here
     fprintf(outputLogFile, "At time %d process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f \n", getClk(), running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time, TA, WTA);
     printf("At time %d process %d finished arr %d total %d remain %d wait %d TA %d WTA %.2f\n", getClk(), running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time, TA, WTA);
 
     kill(running_proc->process_id, SIGKILL);
+
     free(running_proc);
     running_proc = NULL;
     signal(SIGUSR1, finishProcess);
@@ -459,7 +465,6 @@ void RoundRobin(int qu)
     if (running_proc )
     {
         cur_quantum++;
-        //(*shared_memory_address)--;
         printf("quantum now %d, %d, %d\n", cur_time, cur_quantum, quantum);
         running_proc->remaining_time = *shared_memory_address;
         
@@ -467,7 +472,6 @@ void RoundRobin(int qu)
         {
             // insert back to ready queue
             Enqueue(queue, running_proc);
-            //kill(running_proc->process_id, SIGSTOP);
             running_proc->last_run = cur_time;
             running_proc->state = blocked;
 
@@ -476,34 +480,27 @@ void RoundRobin(int qu)
             printf("At time %d process %d stopped arr %d total %d remain %d wait %d\n", cur_time, running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time);
 
             // send signal stop to process
-             kill(running_proc->process_id, SIGSTOP);
+            kill(running_proc->process_id, SIGSTOP);
         }
         else // return to run again
         {
-            // printf(" HEllo from else ,\n", cur_time);
             return;
         }
     }
-    // else
-    //     printf(" HEllo from else  %d,\n", cur_time);
-
 
     printf("welcome in RR \n");
     cur_quantum = 0;
-    /*if(const_num_of_proc==num_of_proc)
-    cur_quantum = 1;
-    else cur_quantum=0;*/
+
     struct PCB *temp = running_proc;
-    // int flag=
    
     running_proc = Dequeue(queue);
 
-  printf("at time %d , value in queue is:%d \n",cur_time,running_proc->id);
+    printf("at time %d , value in queue is:%d \n",cur_time,running_proc->id);
+
     // the process runs for the first time
     if (running_proc->state == ready)
     {
 
-        // cur_quantum++;
         // First calculate waiting time
         *shared_memory_address = running_proc->remaining_time;
         running_proc->waiting_time = cur_time - running_proc->arrival_time;
@@ -512,19 +509,9 @@ void RoundRobin(int qu)
         fprintf(outputLogFile, "At time %d process %d started arr %d total %d remain %d wait %d\n", cur_time, running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time);
         printf("At time %d process %d started arr %d total %d remain %d wait %d\n", cur_time, running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time);
         startProcess(running_proc);
-        // if (running_proc->id == 1)
-        // {
-        //     goto label;
-        //     cur_quantum++;
-        //     // running_proc->remaining_time= running_proc->remaining_time+2;
-        // }
     }
-    // the process runs from a blocing state
-    else if (running_proc->state == blocked)
+    else if (running_proc->state == blocked)    // the process runs from a blocing state
     {
-
-   // // add signal continue
-         //kill(running_proc->process_id, SIGCONT);
         running_proc->state = ready;
         running_proc->waiting_time += cur_time - running_proc->last_run;
 
@@ -533,7 +520,7 @@ void RoundRobin(int qu)
         printf("At time %d process %d resumed arr %d total %d remain %d wait %d\n", cur_time, running_proc->id, running_proc->arrival_time, running_proc->run_time, running_proc->remaining_time, running_proc->waiting_time);
 
         // // add signal continue
-         kill(running_proc->process_id, SIGCONT);
+        kill(running_proc->process_id, SIGCONT);
     }
 }
 

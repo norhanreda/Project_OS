@@ -3,10 +3,7 @@
 #include<stdio.h>
 #include <string.h>
 
-//////////////////////
-
-
- struct process
+struct process
 {
 	int id;			
 	int arrival;
@@ -87,8 +84,6 @@ int main(int argc, char * argv[])
 {
     int current_time = -1;
 
-    /////////////////////////////
-
     shmid = shmget(65,1000*sizeof(struct process), IPC_CREAT | 0664);
     sem1 = semget(66, 1, 0666 | IPC_CREAT);
     sem2 = semget(67, 1, 0666 | IPC_CREAT);
@@ -97,8 +92,7 @@ int main(int argc, char * argv[])
     {
         perror("Error in create \n");
         exit(-1);
-    }
-    
+    }    
     
     semun1.val = 0; /* initial value of the semaphore, Binary semaphore */
     semun2.val = 0;
@@ -113,10 +107,7 @@ int main(int argc, char * argv[])
         perror("Error in semctl \n");
         exit(-1);
     }
-
-
-
-    
+   
     struct process *shmaddr = shmat(shmid, (void *)0, 0);
     if (shmaddr == NULL)
     {
@@ -126,12 +117,12 @@ int main(int argc, char * argv[])
     
     signal(SIGINT, clearResources);
 
-    /////////////semaphore////////////
+    /*********************semaphore*********************/
     sem = semget(20, 1, 0666 | IPC_CREAT);
     if (sem == -1)
     {
-                perror("Error in create sem");
-                exit(-1);
+        perror("Error in create sem");
+        exit(-1);
     }
 
     semun.val = 0; /* initial value of the semaphore, Binary semaphore */
@@ -149,27 +140,27 @@ int main(int argc, char * argv[])
     int Algorithm, Quantum;
     printf("Choose scheduling algorithm: \n 1- Highest Priority First \n 2- Shortest Remaining Job First \n 3- Round Robin \n");
     if ((Algorithm = fgetc(stdin)) == EOF)
+    {
+        fprintf(stderr, "error reading chosen algorithm\n");
+        exit(-1);
+    }
+    fgetc(stdin); // take the newline out of the stdin
+
+    Algorithm -= '0';
+
+    if (Algorithm == 3)
+    {
+        printf("Enter quantum for round robin \n");
+
+        char value[100];
+        if (fgets(value, 100, stdin) == NULL)
         {
-                fprintf(stderr, "error reading chosen algorithm\n");
-                exit(-1);
+            fprintf(stderr, "error reading quantum o\n");
+            exit(-1);
         }
-        fgetc(stdin); // take the newline out of the stdin
 
-        Algorithm -= '0';
-
-        if (Algorithm == 3)
-        {
-                printf("Enter quantum for round robin \n");
-
-                char value[100];
-                if (fgets(value, 100, stdin) == NULL)
-                {
-                        fprintf(stderr, "error reading quantum o\n");
-                        exit(-1);
-                }
-
-                Quantum = atoi(value);
-        }
+        Quantum = atoi(value);
+    }
     
     // 3. Initiate and create the scheduler and clock processes.
 
@@ -206,7 +197,6 @@ int main(int argc, char * argv[])
     // TODO Generation Main Loop
 
     // 5. Create a data structure for processes and provide it with its parameters.
-       //done 
 
     // 6. Send the information to the scheduler at the appropriate time.
     while(1)

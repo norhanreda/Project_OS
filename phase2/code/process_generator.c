@@ -2,7 +2,6 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include<string.h>
-//////////////////////
 
 struct process
 {
@@ -280,7 +279,7 @@ struct process* CreateProcesses(char* inputFileName)
         int count = 0;
         while (!feof(inputFile)) 
         {
-                // lines beginning with # and should be ignored.
+            // lines beginning with # and should be ignored.
             if(fgetc(inputFile) =='#')
             {
                 while(fgetc(inputFile) !='\n');
